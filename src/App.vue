@@ -6,7 +6,6 @@
 </template>
 
 <script>
-// 21/8/24接口还能用 不过是/home/multidata
   import MainTabBar from './components/content/mainTabbar/MainTabBar.vue'
 
   export default {
