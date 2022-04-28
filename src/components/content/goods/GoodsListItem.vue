@@ -1,6 +1,6 @@
 <template>
   <div class="goods-item">
-    <img :src="goodsItem.show.img" alt="">
+    <img :src="goodsItem.show.img" alt="" @load="image">
     <div class="goods-info">
       <p>{{goodsItem.title}}</p>
       <span class="price">{{goodsItem.price}}</span>
@@ -23,7 +23,7 @@
   }
 </script>
 
-<style>
+<style scoped>
   .goods-item {
     padding-bottom: 40px;
     position: relative;
