@@ -10,7 +10,7 @@
 <script>
   export default {
     name: "TabBarItem",
-    props: {
+    props: {//从MainTabBar中获取路径
       path: String,
       activeColor: {
         type: String,
@@ -23,12 +23,13 @@
       }
     },
     computed: {
-      isActive() {
+      isActive() {//判断该页面是否被激活
         // /home -> item1(/home) = true
         // /home -> item1(/category) = false
         // /home -> item1(/cart) = true
         // /home -> item1(/profile) = true
         return this.$route.path.indexOf(this.path) !== -1
+        //取路由的路径和页面的路径对比，-1为不相等
       },
       activeStyle() {
         return this.isActive ? {color: this.activeColor} : {}

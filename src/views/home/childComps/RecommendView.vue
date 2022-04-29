@@ -19,6 +19,7 @@ export default {
         return []
       }
     }
+    //从home中获取recommends的数据
   }
 }
 </script>

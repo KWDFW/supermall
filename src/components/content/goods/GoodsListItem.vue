@@ -1,6 +1,6 @@
 <template>
-  <div class="goods-item">
-    <img :src="goodsItem.show.img" alt="" @load="image">
+  <div class="goods-item" @click="itemClick">
+    <img :src="goodsItem.show.img" alt="" @load="imageLoad">
     <div class="goods-info">
       <p>{{goodsItem.title}}</p>
       <span class="price">{{goodsItem.price}}</span>
@@ -19,6 +19,18 @@
           return {}
         }
       }
+      //从goodList中获取每个item的数据
+    },
+    methods: {
+      imageLoad(){
+        this.$bus.$emit('itemImageLoad')
+      },
+      //当图片被加载完成后，调用该函数
+
+      itemClick(){
+        this.$router.push('/detail/'+this.goodsItem.iid)
+      }
+      //当图片被点击后，通过路由跳转到详情页
     }
   }
 </script>

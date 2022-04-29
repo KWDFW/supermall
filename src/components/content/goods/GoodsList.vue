@@ -3,7 +3,6 @@
     <goods-list-item
     v-for="(item,index) in goods" :key="index"
     :goodsItem="item"></goods-list-item>
-    {{goods}}
   </div>
 </template>
 
@@ -22,6 +21,7 @@
           return []
         }
       }
+      //从home接受到商品数据
     }
   }
 </script>

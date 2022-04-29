@@ -1,6 +1,10 @@
 <template>
   <div id="app">
-    <router-view></router-view>
+    <keep-alive>
+      <router-view></router-view>
+      <!-- 根据路由信息，跳转到不同的页面 -->
+    </keep-alive>
+    <!-- keep-alice:使页面跳转后仍保持原来的状态 -->
     <main-tab-bar></main-tab-bar>
   </div>
 </template>

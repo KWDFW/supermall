@@ -19,6 +19,7 @@
           return []
         }
       }
+      //从home中获取titles的数据
     },
     data(){
       return {
@@ -30,6 +31,7 @@
         this.currentIndex=index;
         this.$emit('tabClick',index)
       }
+      //当元素被点击时，向home发送点击事件和index
     }
   }
 </script>
