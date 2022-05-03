@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <keep-alive>
+    <keep-alive exclude="Detail">
       <router-view></router-view>
       <!-- 根据路由信息，跳转到不同的页面 -->
     </keep-alive>
