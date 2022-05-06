@@ -1,14 +1,24 @@
 <template>
   <div id="detail">
-    <detail-nav-bar class="detail-nav"></detail-nav-bar>
-    <scroll class="content" ref="scroll">
+    <detail-nav-bar class="detail-nav" @titleClick="titleClick"
+    ref="nav"></detail-nav-bar>
+    <scroll class="content" ref="scroll" @scroll="contentScroll"
+    :probeType="3">
       <detail-swiper :topImages="topImages"></detail-swiper>
       <detail-base-info :goods="goods"></detail-base-info>
       <detail-shop-info :shop="shop"></detail-shop-info>
-      <detail-goods-info :detail-info="detailInfo"></detail-goods-info>
-      <detail-param-info :param-info="paramInfo"></detail-param-info>
-      <detail-comment-info :comment-info="commentInfo"></detail-comment-info>
+      <detail-goods-info :detail-info="detailInfo"
+      @imageLoad="imageLoad"></detail-goods-info>
+      <detail-param-info :param-info="paramInfo"
+      ref="params"></detail-param-info>
+      <detail-comment-info :comment-info="commentInfo"
+      ref="comment"></detail-comment-info>
+      <goods-list :goods="recommends"
+      ref="recommend"></goods-list>
     </scroll>
+    <detail-bottom-bar @addToCart="addToCart"></detail-bottom-bar>
+
+    <back-top @click.native="backClick" v-show="isShowBackTop"></back-top>
   </div>
 </template>
 
@@ -20,10 +30,13 @@
   import DetailGoodsInfo from './childComps/DetailGoodsInfo.vue'
   import DetailParamInfo from './childComps/DetailParamInfo.vue'
   import DetailCommentInfo from './childComps/DetailCommentInfo.vue'
+  import DetailBottomBar from './childComps/DetailBottomBar.vue'
 
   import Scroll from '../../components/common/scroll/Scroll.vue'
+  import GoodsList from '../../components/content/goods/GoodsList.vue'
+  import BackTop from '../../components/content/backTop/BackTop.vue'
 
-  import {getDetail,Goods,Shop,GoodsParam} from '../../network/detail.js'
+  import {getDetail,Goods,Shop,GoodsParam,getRecommend} from '../../network/detail.js'
 
   export default {
     name:'Detail',
@@ -35,7 +48,10 @@
       DetailGoodsInfo,
       DetailParamInfo,
       DetailCommentInfo,
-      Scroll
+      DetailBottomBar,
+      Scroll,
+      GoodsList,
+      BackTop
     },
     data(){
       return {
@@ -46,6 +62,10 @@
         detailInfo:{},
         paramInfo:{},
         commentInfo:{},
+        recommends:[],
+        themeTopYs:[],
+        currentIndex:0,
+        isShowBackTop:false,
       }
     },
     created () {
@@ -66,14 +86,64 @@
         if(data.rate.cRate!==0){//有评论就取出来
           this.commentInfo=data.rate.list[0]
         }
+
       })
+
+      getRecommend().then(res=>{
+        this.recommends=res.data.list
+      })
+
     },
-    activated () {
-      // this.iid=this.$route.params.iid
+    mouned () {//初始时默认点击一下商品
+      this.titleClick(0)
     },
     methods: {
       imageLoad(){
         this.$refs.scroll.refresh()
+      },
+
+      titleClick(index){
+        this.themeTopYs=[]
+          
+        this.themeTopYs.push(0)
+        this.themeTopYs.push(this.$refs.params.$el.offsetTop)
+        this.themeTopYs.push(this.$refs.comment.$el.offsetTop)
+        this.themeTopYs.push(this.$refs.recommend.$el.offsetTop)
+        this.themeTopYs.push(Number.MAX_VALUE)
+        //加入最大值是为了之后的if判断用
+
+        this.$refs.scroll.scrollTo(0,-this.themeTopYs[index],200)
+      },
+
+      contentScroll(position){
+        const positionY=-position.y
+        for(let i=0;i<this.themeTopYs.length-1;i++){
+          //if中条件是为了处理边界条件
+          if(this.currentIndex!==i&&positionY>=this.themeTopYs[i]
+          &&positionY<this.themeTopYs[i+1]){
+            this.currentIndex=i
+            //currentIndex是为了减少判断次数
+            this.$refs.nav.currentIndex=this.currentIndex
+          }
+        }
+
+        this.isShowBackTop=(-position.y)>1000
+        
+      },
+
+      backClick(){
+        this.$refs.scroll.scrollTo(0,0)
+      },
+
+      addToCart(){
+        const product={}
+        product.image=this.topImages[0]
+        product.title=this.goods.title
+        product.desc=this.goods.desc
+        product.price=this.goods.realPrice
+        product.iid=this.iid
+
+        // this.$store.commit('addCart',product)
       }
     }
   }
@@ -94,6 +164,6 @@
   }
 
   .content{
-    height: calc(100% - 44px);
+    height: calc(100% - 44px - 49px);
   }
 </style>

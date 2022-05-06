@@ -1,6 +1,6 @@
 <template>
   <div class="goods-item" @click="itemClick">
-    <img :src="goodsItem.show.img" alt="" @load="imageLoad">
+    <img :src="showImage" alt="" @load="imageLoad">
     <div class="goods-info">
       <p>{{goodsItem.title}}</p>
       <span class="price">{{goodsItem.price}}</span>
@@ -20,6 +20,11 @@
         }
       }
       //从goodList中获取每个item的数据
+    },
+    computed: {
+      showImage(){
+        return this.goodsItem.image||this.goodsItem.show.img
+      }
     },
     methods: {
       imageLoad(){
@@ -81,6 +86,6 @@
     top: -1px;
     width: 14px;
     height: 14px;
-    background: url("@/assets/img/common/collect.svg") 0 0/14px 14px;
+    background: url("~assets/img/common/collect.svg") 0 0/14px 14px;
   }
 </style>
