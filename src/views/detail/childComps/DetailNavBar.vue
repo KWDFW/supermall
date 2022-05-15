@@ -27,6 +27,7 @@
       return {
         titles:['商品','参数','评论','推荐'],
         currentIndex:0
+        //记录当前选中标题的下标值
       }
     },
     methods: {
@@ -37,6 +38,7 @@
       backClick(){
         this.$router.back()
       }
+      //点击箭头后，退回到主页
     }
   }
 </script>

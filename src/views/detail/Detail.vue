@@ -5,20 +5,28 @@
     <scroll class="content" ref="scroll" @scroll="contentScroll"
     :probeType="3">
       <detail-swiper :topImages="topImages"></detail-swiper>
+
       <detail-base-info :goods="goods"></detail-base-info>
+
       <detail-shop-info :shop="shop"></detail-shop-info>
+
       <detail-goods-info :detail-info="detailInfo"
       @imageLoad="imageLoad"></detail-goods-info>
+
       <detail-param-info :param-info="paramInfo"
       ref="params"></detail-param-info>
+
       <detail-comment-info :comment-info="commentInfo"
       ref="comment"></detail-comment-info>
+
       <goods-list :goods="recommends"
       ref="recommend"></goods-list>
     </scroll>
     <detail-bottom-bar @addToCart="addToCart"></detail-bottom-bar>
 
     <back-top @click.native="backClick" v-show="isShowBackTop"></back-top>
+
+    <!-- <toast :message="message" :show="show"></toast> -->
   </div>
 </template>
 
@@ -37,6 +45,11 @@
   import BackTop from '../../components/content/backTop/BackTop.vue'
 
   import {getDetail,Goods,Shop,GoodsParam,getRecommend} from '../../network/detail.js'
+  //引用包含商品信息的
+
+  import { mapActions } from 'vuex'
+
+  // import Toast from '../../components/common/toast/toast.vue'
 
   export default {
     name:'Detail',
@@ -51,25 +64,29 @@
       DetailBottomBar,
       Scroll,
       GoodsList,
-      BackTop
+      BackTop,
+      // Toast
     },
     data(){
       return {
-        iid:null,
-        topImages:null,
-        goods:{},
-        shop:{},
-        detailInfo:{},
-        paramInfo:{},
-        commentInfo:{},
-        recommends:[],
-        themeTopYs:[],
-        currentIndex:0,
-        isShowBackTop:false,
+        iid:null,//记录该商品的iid
+        topImages:null,//轮播图的图片
+        goods:{},//商品基本信息
+        shop:{},//商家信息
+        detailInfo:{},//商品详细信息
+        paramInfo:{},//商品参数
+        commentInfo:{},//商品评论信息
+        recommends:[],//商品相关推荐
+        themeTopYs:[],//记录四个标题到顶点的位置
+        currentIndex:0,//记录当前标题的下标值
+        isShowBackTop:false,//控制是否显示返回顶部的按钮
+        // message:'',
+        // show:false
       }
     },
     created () {
       this.iid=this.$route.params.iid
+      //获取商品的iid
 
       getDetail(this.iid).then(res=>{
         const data=res.result
@@ -88,6 +105,7 @@
         }
 
       })
+      //获取商品的信息
 
       getRecommend().then(res=>{
         this.recommends=res.data.list
@@ -98,6 +116,8 @@
       this.titleClick(0)
     },
     methods: {
+      ...mapActions(['addCart']),
+      //映射函数
       imageLoad(){
         this.$refs.scroll.refresh()
       },
@@ -113,7 +133,9 @@
         //加入最大值是为了之后的if判断用
 
         this.$refs.scroll.scrollTo(0,-this.themeTopYs[index],200)
+        //间隔200ms之后滚动到相应位置
       },
+      //标题被点击之后，实现页面的自动滚动
 
       contentScroll(position){
         const positionY=-position.y
@@ -124,16 +146,20 @@
             this.currentIndex=i
             //currentIndex是为了减少判断次数
             this.$refs.nav.currentIndex=this.currentIndex
+            //父组件访问子组件，改变子组件中的下标值
           }
         }
+        //随着页面滚动，改变当前的标题下标
 
         this.isShowBackTop=(-position.y)>1000
-        
+        //显示回到顶部按钮
       },
+      //页面发生滚动时，调用该函数
 
       backClick(){
         this.$refs.scroll.scrollTo(0,0)
       },
+      //点击后回到顶部
 
       addToCart(){
         const product={}
@@ -142,9 +168,27 @@
         product.desc=this.goods.desc
         product.price=this.goods.realPrice
         product.iid=this.iid
+        
 
-        // this.$store.commit('addCart',product)
+        this.addCart(product).then(res=>{
+          // this.show=true
+          // this.message=res
+
+          // setTimeout(() => {
+          //   this.show=false
+          //   this.message=''
+          // },1500);
+
+          this.$toast.show(res,1000)
+        })
+        //点击添加购物车时，显示提示信息
+
+        // this.$store.dispatch('addCart',product).then(res=>{
+        //   console.log(res);
+        // })
+        //利用vuex把信息存储在product里面
       }
+      //点击后添加商品到购物车
     }
   }
 </script>
