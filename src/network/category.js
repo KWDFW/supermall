@@ -1,6 +1,6 @@
 import { request } from "./request";
 
-export function getCategory(){
+export function getgetCategory(){
   return request({
     url:'/category'
   })

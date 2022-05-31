@@ -1,103 +1,159 @@
 <template>
-  <div id="category">
-    <nav-bar class="nav-bar"><div slot="center">商品分类</div></nav-bar>
-
-    <div class="content">
-      <tab-menu :categories="categories" @selectItem="selectItem"></tab-menu>
-    </div>
-    
-    <scroll>
-      
-    </scroll>
+  <div>
+     <category-nav-bar></category-nav-bar>
+     <slider-bar :slideBarList="categoryList" @slideBarItemClick="slideBarItemClick">      
+     </slider-bar>
+      <tab-control :title="tabControlTitle"
+       @tabClick="tabClick"
+        ref="tabControl1" 
+        v-show="isStatic" 
+        class="static"></tab-control>
+     <scroll class="content"
+      :probeType="3"
+      :pullUpLoad="true" 
+      @backTopScroll="backTopScroll" 
+     ref="scroll">
+     <category-goods :categoryDetail="currentList" @goodsImgLoad="goodsImgLoad"></category-goods>
+     <tab-control :title="tabControlTitle" @tabClick="tabClick" ref="tabControl" :class="{staticTop:isStatic}"></tab-control>
+     <good-list :goods="tpyeData" class="goods-font"></good-list>
+     </scroll>
   </div>
 </template>
 
 <script>
-  import NavBar from '../../components/common/navbar/NavBar.vue';
-
-
-  import Scroll from '../../components/common/scroll/Scroll.vue';
-  import TabMenu from '../category/childComps/TabMenu.vue';
-  
-  import {getCategory, getSubcategory, getCategoryDetail} from "network/category";
-  export default {
-    name:'Category',
-    components: {
-      NavBar,
-      Scroll,
-      TabMenu,
+import categoryNavBar from './childComps/categoryNavBar.vue'
+import SliderBar from './childComps/sliderBar.vue'
+import {debounce} from '../../common/ultils.js'
+//请求相关方法引入
+import {getgetCategory,getSubcategory,getCategoryDetail} from '@/network/category.js'
+import CategoryGoods from './childComps/categoryGoods.vue'
+import Scroll from '../../components/common/scroll/Scroll.vue'
+import TabControl from '../../components/common/tabbar/TabBar.vue'
+import GoodList from '../../components/content/goods/GoodsList.vue'
+export default {
+  name:'ShopCategory',
+  components: { categoryNavBar, SliderBar, CategoryGoods, Scroll, TabControl, GoodList,},
+  data() {
+    return {
+      //分类信息
+      categoryList:[],
+      //当前渲染页面的数据
+      currentList:[],
+      //给tabControl传数据
+      tabControlTitle:['流行','新款','精品'],
+      //拿到当前所处分类，以便后面根据分类拿到type数据
+      currentIndex:0,
+      //储存一下tabcontrol类型，拿到不同tabControl索引请求不同数据
+      typeStyle:['pop','new','sell'],
+      typeIndex:0,
+      //type数据
+      tpyeData:[],
+      //控件距离顶部高度
+     tabControlTop:null,
+     //用来存防抖函数
+     countTop:null,
+     //控制吸顶类是否运用
+     isStatic:false
+    }
+  },
+  created() {
+    this.getgetCategory()
+  },
+  methods: {
+    getgetCategory(){
+      //先获取分类信息
+      getgetCategory().then(res=>{
+      //获取第一个正在流行的数据进行渲染
+      this.categoryList = res.data.category.list;
+      this.getSubcategory(0)
+      this.getCategoryDetail()
+    })
     },
-    data() {
-      return {
-        categories: [],
-        categoryData: {},
-        currentIndex: -1
-      }
+    slideBarItemClick(index){
+      this.getSubcategory(index)
+      //切换类型的时候重置tabControl的索引，当前的tab索引，使切换类型tabControl总能从流行开始
+      this.$refs.tabControl.currentindex=0
+      this.typeIndex=0
+      this.currentIndex=index
+      //并且用新的索引请求数据
+      this.getCategoryDetail()
+      this.$refs.scroll. scrollTo(0,0,0)
+      //跳到最顶，不然切换界面还是原来的位置，不能从头开始看
     },
-    created () {
-      this._getCategory()
+    getSubcategory(index){
+      //将分类索引交给当前索引记录，以便请求type数据
+      this.currentIndex=index
+      //根据当前的点击的分类的索引，去找到对应的maitKey去请求数据，再把数据交给currentList
+      const currentmaitKey=this.categoryList[index].maitKey
+      getSubcategory(currentmaitKey).then(res=>{
+        this.currentList=res.data.list
+      })
     },
-    computed: {
-      
+    getCategoryDetail(){
+      // this.$toast.loading({
+      //   // loading的时候禁止点击
+      //   forbidClick: true,
+      //   message: "加载中..."
+      //   });
+      // getCategoryDetail(this.categoryList[this.currentIndex].miniWallkey,this.typeStyle[this.typeIndex]).then(res=>{
+      //   this.tpyeData=res
+      //   setTimeout(() => {
+      //   this.$toast.clear();
+      //   }, 500);
+      // })
+      getCategoryDetail(this.categoryList[this.currentIndex].miniWallkey,this.typeStyle[this.typeIndex]).then(res=>{
+        this.tpyeData=res
+      })
     },
-    methods: {
-		  _getCategory() {
-		    getCategory().then(res => {
-		      // 1.获取分类数据
-		      this.categories = res.data.category.list
-          // 2.初始化每个类别的子数据
-          for (let i = 0; i < this.categories.length; i++) {
-            this.categoryData[i] = {
-              subcategories: {},
-              categoryDetail: {
-                'pop': [],
-                'new': [],
-                'sell': []
-              }
-            }
-          }
-          // 3.请求第一个分类的数据
-          this._getSubcategories(0)
-        })
-      },
-      _getSubcategories(index) {
-        this.currentIndex = index;
-		    const mailKey = this.categories[index].maitKey;
-        getSubcategory(mailKey).then(res => {
-          this.categoryData[index].subcategories = res.data
-          this.categoryData = {...this.categoryData}
-          this._getCategoryDetail('pop')
-          this._getCategoryDetail('sell')
-          this._getCategoryDetail('new')
-        })
-      },
-      _getCategoryDetail(type) {
-		    // 1.获取请求的miniWallkey
-        const miniWallkey = this.categories[this.currentIndex].miniWallkey;
-        // 2.发送请求,传入miniWallkey和type
-		    getCategoryDetail(miniWallkey, type).then(res => {
-		      // 3.将获取的数据保存下来
-		      this.categoryData[this.currentIndex].categoryDetail[type] = res
-          this.categoryData = {...this.categoryData}
-        })
-      },
-
-      selectItem(index) {
-        this._getSubcategories(index)
+    tabClick(typeIndex){
+      this.typeIndex=typeIndex
+      this.$refs.tabControl1.currentindex=typeIndex
+      this.$refs.tabControl.currentindex=typeIndex
+      this.getCategoryDetail()
+    },
+    goodsImgLoad(){
+      this.countTop()
+    },
+    backTopScroll(position){
+      const positionY=-position.y
+      if (positionY>=this.tabControlTop) {
+        this.isStatic=true
+      }else{
+         this.isStatic=false
       }
     }
-  }
+  },
+  activated() {
+    this.$refs.scroll.refresh();
+    this.$bus.$on('imgLoad',()=>{
+    })
+  },
+  mounted() {
+     this.countTop=debounce(()=>{
+      this.tabControlTop=this.$refs.tabControl.$el.offsetTop
+     },500)
+  },
+}
 </script>
 
 <style scoped>
-  .nav-bar {
-    background-color: var(--color-tint);
-    color: #fff;
-    font-weight: 700;
-  }
+.content {
+   position: fixed;
+   top: 44px;
+   bottom: 49px;
+   right: 0;
+   left: 85px;
+   overflow: hidden;
+ }
+ .goods-font .goods-info p{
+   font-size: 10px;
+ }
+ .static {
+   position: relative;
+   width: calc(100% - 85px);
+   left: 85px;
+   right: 0;
+   z-index: 9;
 
-  #category {
-    height:100vh;
-    position: relative;
-  }
+ }
 </style>
