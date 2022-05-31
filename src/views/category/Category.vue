@@ -1,15 +1,31 @@
 <template>
   <div id="category">
+    <nav-bar class="nav-bar"><div slot="center">商品分类</div></nav-bar>
+
+    <div class="content">
+      <tab-menu :categories="categories" @selectItem="selectItem"></tab-menu>
+    </div>
     
+    <scroll>
+      
+    </scroll>
   </div>
 </template>
 
 <script>
+  import NavBar from '../../components/common/navbar/NavBar.vue';
+
+
+  import Scroll from '../../components/common/scroll/Scroll.vue';
+  import TabMenu from '../category/childComps/TabMenu.vue';
+  
   import {getCategory, getSubcategory, getCategoryDetail} from "network/category";
   export default {
     name:'Category',
     components: {
-      
+      NavBar,
+      Scroll,
+      TabMenu,
     },
     data() {
       return {
@@ -65,9 +81,23 @@
           this.categoryData = {...this.categoryData}
         })
       },
+
+      selectItem(index) {
+        this._getSubcategories(index)
+      }
     }
   }
 </script>
 
 <style scoped>
+  .nav-bar {
+    background-color: var(--color-tint);
+    color: #fff;
+    font-weight: 700;
+  }
+
+  #category {
+    height:100vh;
+    position: relative;
+  }
 </style>
